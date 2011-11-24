@@ -1,0 +1,8 @@
+{
+  "author": "Mark Engel",
+  "name": "zanox",
+  "version": "1.0.0",
+  "dependencies": {
+    "hat": "*"
+  }
+}
