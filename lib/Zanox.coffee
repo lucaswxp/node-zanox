@@ -54,3 +54,17 @@ module.exports = class
         @requester options, next
     getAdspaces: (next) => @sendRequest 'GET', '/adspaces', next
     getProgramsOfAdspace: (id, params, next) => @sendRequest 'GET', '/programs/adspace/' + id, params, next
+
+    getAllProgramsOfAdspace: (id, next) =>
+        items = 50
+        results = []
+
+        fetch = (page, next) =>
+            @getProgramsOfAdspace id, {items: items, page: page}, next
+        fetchLoop = (page) =>
+            fetch page, (err, result) =>
+                if err? then next err else
+                    results.push result
+                    enough = items * (page+1) >= result.total
+                    if not enough then fetch page+1 else next null, results
+        fetchLoop 0
