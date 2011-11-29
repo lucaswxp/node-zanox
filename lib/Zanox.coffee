@@ -72,10 +72,9 @@ module.exports = class
         fetchLoop = (page) =>
             fetch page, (err, result) =>
                 if err?
-                    console.log 'error', err
                     next err
                 else
                     results.push result
                     enough = items * (page+1) >= result.total
-                    if not enough then fetch page+1, next else next null, results
+                    if not enough then fetchLoop page+1 else next null, results
         fetchLoop 0
