@@ -5,6 +5,7 @@
 crypto = require 'crypto'
 http = require 'http'
 querystring = require 'querystring'
+assert = require 'assert'
 
 hat = require 'hat'
 
@@ -34,6 +35,7 @@ createRequestOptions = (connectId, secret) =>
                 'Authorization': header
 
 requester = (http) => (options, next) =>
+    assert.ok next?, 'missing next in requester'
     raw = ''
     req = http.request options, (res) ->
         res.setEncoding 'utf8'
@@ -50,21 +52,30 @@ module.exports = class
         @requester = requester client
 
     sendRequest: (verb, uri, params, next) =>
+        assert.ok next?, 'sendRequest: missing next'
         options = @createRequests verb, uri, timestamp(), nonce(), params
         @requester options, next
     getAdspaces: (next) => @sendRequest 'GET', '/adspaces', next
-    getProgramsOfAdspace: (id, params, next) => @sendRequest 'GET', '/programs/adspace/' + id, params, next
+    getProgramsOfAdspace: (id, params, next) =>
+        assert.ok next?, 'getProgramsOfAdspace: missing next'
+        @sendRequest 'GET', '/programs/adspace/' + id, params, next
 
     getAllProgramsOfAdspace: (id, next) =>
+        assert.ok id?, 'getAllProgramsOfAdsacpe: missing id'
+        assert.ok next?, 'getAllProgramsOfAdspace: missing next'
         items = 50
         results = []
 
         fetch = (page, next) =>
+            assert.ok next?, 'fetch: missing next'
             @getProgramsOfAdspace id, {items: items, page: page}, next
         fetchLoop = (page) =>
             fetch page, (err, result) =>
-                if err? then next err else
+                if err?
+                    console.log 'error', err
+                    next err
+                else
                     results.push result
                     enough = items * (page+1) >= result.total
-                    if not enough then fetch page+1 else next null, results
+                    if not enough then fetch page+1, next else next null, results
         fetchLoop 0
