@@ -55,7 +55,8 @@ module.exports = class
         assert.ok next?, 'sendRequest: missing next'
         options = @createRequests verb, uri, timestamp(), nonce(), params
         @requester options, next
-    getAdspaces: (next) => @sendRequest 'GET', '/adspaces', next
+    getAdspaces: (next) => @sendRequest 'GET', '/adspaces', {}, next
+    getAdmedia: (params, next) => @sendRequest 'GET', '/admedia', params, next
     getProgramsOfAdspace: (id, params, next) =>
         assert.ok next?, 'getProgramsOfAdspace: missing next'
         @sendRequest 'GET', '/programs/adspace/' + id, params, next
