@@ -8,6 +8,7 @@ querystring = require 'querystring'
 assert = require 'assert'
 
 hat = require 'hat'
+_ = require 'underscore'
 
 hatLength = (length) -> hat(4*length)
 nonce = -> hatLength 20
@@ -46,6 +47,20 @@ requester = (http) => (options, next) =>
     req.on 'error', (e) -> next e
     req.end()
 
+FetchLoop = (fetchMethod, next) =>
+    items = 50
+    results = []
+    fetchLoop = (page) =>
+        fetchMethod page, items, (err, result) =>
+            assert.ok page?, 'missing page in fetchMethod call'
+            if err?
+                next err
+            else
+                results.push result
+                enough = items * (page+1) >= result.total
+                if not enough then fetchLoop page+1 else next null, results
+    fetchLoop 0
+
 module.exports = class
     constructor: (connectId, secretKey, client = http) ->
         @createRequests = createRequestOptions connectId, secretKey
@@ -60,22 +75,24 @@ module.exports = class
     getProgramsOfAdspace: (id, params, next) =>
         assert.ok next?, 'getProgramsOfAdspace: missing next'
         @sendRequest 'GET', '/programs/adspace/' + id, params, next
+    getSalesOfDate: (date, params, next) =>
+        assert.ok date?, 'date is required'
+        @sendRequest 'GET', '/reports/sales/date/' + date, params, next
+
+    # generic fetch all
+    # paramters, conf, callback
+    getAllSalesOfDate: (date, params, next) =>
+        method = @getSalesOfDate
+
+        fetch = (page, items, next) =>
+            fetchParams = _.extend {}, params, {items: items, page: page},
+            method date, fetchParams,  next
+        FetchLoop fetch, next
 
     getAllProgramsOfAdspace: (id, next) =>
         assert.ok id?, 'getAllProgramsOfAdsacpe: missing id'
         assert.ok next?, 'getAllProgramsOfAdspace: missing next'
-        items = 50
-        results = []
-
-        fetch = (page, next) =>
-            assert.ok next?, 'fetch: missing next'
-            @getProgramsOfAdspace id, {items: items, page: page}, next
-        fetchLoop = (page) =>
-            fetch page, (err, result) =>
-                if err?
-                    next err
-                else
-                    results.push result
-                    enough = items * (page+1) >= result.total
-                    if not enough then fetchLoop page+1 else next null, results
-        fetchLoop 0
+        method = @getProgramsOfAdspace
+        fetch = (page, items, next) =>
+            method id, {items: items, page: page}, next
+        FetchLoop fetch, next
