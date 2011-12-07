@@ -43,7 +43,11 @@ requester = (http) => (options, next) =>
         res.on 'data', (chunk) ->
             raw += chunk
         res.on 'end', ->
-            next null, JSON.parse raw
+            try
+                result = JSON.parse raw
+                next null, result
+            catch e
+                next e
     req.on 'error', (e) -> next e
     req.end()
 
