@@ -59,13 +59,11 @@ FetchLoop = (fetchMethod, next) =>
     results = []
     fetchLoop = (page) =>
         fetchMethod page, items, (err, result) =>
-            assert.ok page?, 'missing page in fetchMethod call'
-            if err?
-                next err
-            else
-                results.push result
-                enough = items * (page+1) >= result.total
-                if not enough then fetchLoop page+1 else next null, results
+            assert page?, 'missing page in fetchMethod call'
+            return next err if err?
+            results.push result
+            enough = items * (page+1) >= result.total
+            if not enough then fetchLoop page+1 else next null, results
     fetchLoop 0
 
 module.exports = class
