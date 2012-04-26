@@ -24,7 +24,7 @@ createRequestOptions = (connectId, secret) =>
     getAuth = getAuthorization secret
     (verb, uri, timestamp, nonce, options) =>
         signature = getAuth verb, uri, timestamp, nonce
-        header = 'ZXWS' + ' ' + connectId + ':' + signature
+        header = "ZXWS #{connectId}:#{signature}"
         query = querystring.stringify(options)
         options =
             host: 'api.zanox.com'
@@ -40,6 +40,7 @@ requester = (http) => (options, next) =>
     raw = ''
     req = http.request options, (res) ->
         res.setEncoding 'utf8'
+        return next "received status code #{res.statusCode} from #{options.host}" if res.statusCode >= 400
         res.on 'data', (chunk) ->
             raw += chunk
         res.on 'end', ->
