@@ -35,20 +35,22 @@ createRequestOptions = (connectId, secret) =>
                 'Nonce': nonce
                 'Authorization': header
 
+secureJsonParse = (text, next) ->
+    try
+        result = JSON.parse text
+        next null, result
+    catch e
+        next e
+
 requester = (http) => (options, next) =>
     assert _.isFunction(next), 'missing next in requester'
     raw = ''
     req = http.request options, (res) ->
         res.setEncoding 'utf8'
         return next "received status code #{res.statusCode} from #{options.host}" if res.statusCode >= 400
-        res.on 'data', (chunk) ->
-            raw += chunk
-        res.on 'end', ->
-            try
-                result = JSON.parse raw
-                next null, result
-            catch e
-                next e
+        res.on 'data', (chunk) -> raw += chunk
+        res.on 'end', -> secureJsonParse raw, next
+
     req.on 'error', (e) -> next e
     req.end()
 
