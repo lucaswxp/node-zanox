@@ -36,7 +36,7 @@ createRequestOptions = (connectId, secret) =>
                 'Authorization': header
 
 requester = (http) => (options, next) =>
-    assert.ok next?, 'missing next in requester'
+    assert _.isFunction(next), 'missing next in requester'
     raw = ''
     req = http.request options, (res) ->
         res.setEncoding 'utf8'
@@ -71,17 +71,17 @@ module.exports = class
         @requester = requester client
 
     sendRequest: (verb, uri, params, next) =>
-        assert.ok next?, 'sendRequest: missing next'
+        assert _.isFunction(next), 'sendRequest: missing next'
         options = @createRequests verb, uri, timestamp(), nonce(), params
         @requester options, next
     getAdspaces: (next) => @sendRequest 'GET', '/adspaces', {}, next
     getAdmedia: (params, next) => @sendRequest 'GET', '/admedia', params, next
     getProgramsOfAdspace: (id, params, next) =>
-        assert.ok next?, 'getProgramsOfAdspace: missing next'
-        @sendRequest 'GET', '/programs/adspace/' + id, params, next
+        assert _.isFunction(next), 'getProgramsOfAdspace: missing next'
+        @sendRequest 'GET', "/programs/adspace/#{id}", params, next
     getSalesOfDate: (date, params, next) =>
-        assert.ok date?, 'date is required'
-        @sendRequest 'GET', '/reports/sales/date/' + date, params, next
+        assert date?, 'date is required'
+        @sendRequest 'GET', "/reports/sales/date/#{date}", params, next
 
     # generic fetch all
     # paramters, conf, callback
