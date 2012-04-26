@@ -49,9 +49,9 @@ requester = (http) => (options, next) =>
         res.setEncoding 'utf8'
         return next "received status code #{res.statusCode} from #{options.host}" if res.statusCode >= 400
         res.on 'data', (chunk) -> raw += chunk
-        res.on 'end', -> secureJsonParse raw, next
+        res.once 'end', -> secureJsonParse raw, next
 
-    req.on 'error', (e) -> next e
+    req.once 'error', (e) -> next e
     req.end()
 
 FetchLoop = (fetchMethod, next) =>
