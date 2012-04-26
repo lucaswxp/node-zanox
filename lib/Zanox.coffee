@@ -95,8 +95,8 @@ module.exports = class
         FetchLoop fetch, next
 
     getAllProgramsOfAdspace: (id, next) =>
-        assert.ok id?, 'getAllProgramsOfAdsacpe: missing id'
-        assert.ok next?, 'getAllProgramsOfAdspace: missing next'
+        assert id?, 'getAllProgramsOfAdsacpe: missing id'
+        assert _.isFunction(next), 'getAllProgramsOfAdspace: missing next'
         method = @getProgramsOfAdspace
         fetch = (page, items, next) =>
             method id, {items: items, page: page}, next
