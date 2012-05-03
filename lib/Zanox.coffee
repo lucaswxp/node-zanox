@@ -37,8 +37,7 @@ createRequestOptions = (connectId, secret) =>
 
 secureJsonParse = (text, next) ->
     try
-        result = JSON.parse text
-        next null, result
+        next null, JSON.parse text
     catch e
         next e
 
