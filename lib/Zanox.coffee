@@ -14,15 +14,15 @@ hatLength = (length) -> hat(4*length)
 nonce = -> hatLength 20
 timestamp = -> new Date().toUTCString()
 
-getAuthorization = (secret) => (verb, uri, timestamp, nonce) =>
+getAuthorization = (secret) -> (verb, uri, timestamp, nonce) ->
     signature = verb + uri + timestamp + nonce
     hmac = crypto.createHmac 'sha1', secret
     hmac.update signature
     hmac.digest 'base64'
 
-createRequestOptions = (connectId, secret) =>
+createRequestOptions = (connectId, secret) ->
     getAuth = getAuthorization secret
-    (verb, uri, timestamp, nonce, options) =>
+    (verb, uri, timestamp, nonce, options) ->
         signature = getAuth verb, uri, timestamp, nonce
         header = "ZXWS #{connectId}:#{signature}"
         query = querystring.stringify(options)
@@ -65,41 +65,38 @@ FetchLoop = (fetchMethod, next) =>
             if enough then next null, results else fetchLoop page+1
     fetchLoop 0
 
-module.exports = class
-    constructor: (connectId, secretKey, client = http) ->
-        @createRequests = createRequestOptions connectId, secretKey
-        @requester = requester client
+module.exports = (connectId, secretKey, client = http) ->
+    createRequests = createRequestOptions connectId, secretKey
+    requester = requester client
 
+    return api =
     sendRequest: (verb, uri, params, next) =>
         assert _.isFunction(next), 'sendRequest: missing next'
-        options = @createRequests verb, uri, timestamp(), nonce(), params
-        @requester options, next
-    getAdspaces: (next) => @sendRequest 'GET', '/adspaces', {}, next
-    getAdmedia: (params, next) => @sendRequest 'GET', '/admedia', params, next
-    getProgramsOfAdspace: (id, params, next) =>
-        assert _.isFunction(next), 'getProgramsOfAdspace: missing next'
-        @sendRequest 'GET', "/programs/adspace/#{id}", params, next
-    getProgram: (id, next) =>
-        assert _.isFunction(next), 'missing next'
-        @sendRequest 'GET', "/programs/program/#{id}", {}, next
-    getSalesOfDate: (date, params, next) =>
-        assert date?, 'date is required'
-        @sendRequest 'GET', "/reports/sales/date/#{date}", params, next
+        options = createRequests verb, uri, timestamp(), nonce(), params
+        requester options, next
+    getAdspaces: (next) -> api.sendRequest 'GET', '/adspaces', {}, next
+    getAdmedia: (params, next) -> api.sendRequest 'GET', '/admedia', params, next
+    getProgramsOfAdspace: (id, params, next) ->
+        api.sendRequest 'GET', "/programs/adspace/#{id}", params, next
+    getProgram: (id, next) ->
+        api.sendRequest 'GET', "/programs/program/#{id}", {}, next
+    getSalesOfDate: (date, params, next) ->
+        api.sendRequest 'GET', "/reports/sales/date/#{date}", params, next
 
     # generic fetch all
     # paramters, conf, callback
-    getAllSalesOfDate: (date, params, next) =>
-        method = @getSalesOfDate
+    getAllSalesOfDate: (date, params, next) ->
+        method = api.getSalesOfDate
 
-        fetch = (page, items, next) =>
+        fetch = (page, items, next) ->
             fetchParams = _.extend {}, params, {items: items, page: page},
             method date, fetchParams,  next
         FetchLoop fetch, next
 
-    getAllProgramsOfAdspace: (id, next) =>
+    getAllProgramsOfAdspace: (id, next) ->
         assert id?, 'getAllProgramsOfAdsacpe: missing id'
         assert _.isFunction(next), 'getAllProgramsOfAdspace: missing next'
-        method = @getProgramsOfAdspace
-        fetch = (page, items, next) =>
+        method = api.getProgramsOfAdspace
+        fetch = (page, items, next) ->
             method id, {items: items, page: page}, next
         FetchLoop fetch, next
