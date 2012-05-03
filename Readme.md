@@ -11,8 +11,10 @@ Installation
 Usage
 -----
 
-    Zanox = require 'Zanox'
-    zanox = new Zanox connectId, secretKey
-    zanox.getProgramsOfAdspace id, {items: 50}, (err, data) =>
-        if err? then console.log 'error', err else
-            console.log '%j', data
+```coffeescript
+Zanox = require 'Zanox'
+zanox = Zanox connectId, secretKey
+zanox.getProgramsOfAdspace id, {items: 50}, (err, data) ->
+    return console.error err if err?
+    console.log '%j', data
+```
