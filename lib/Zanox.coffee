@@ -80,6 +80,9 @@ module.exports = class
     getProgramsOfAdspace: (id, params, next) =>
         assert _.isFunction(next), 'getProgramsOfAdspace: missing next'
         @sendRequest 'GET', "/programs/adspace/#{id}", params, next
+    getProgram: (id, next) =>
+        assert _.isFunction(next), 'missing next'
+        @sendRequest 'GET', "/programs/program/#{id}", {}, next
     getSalesOfDate: (date, params, next) =>
         assert date?, 'date is required'
         @sendRequest 'GET', "/reports/sales/date/#{date}", params, next
