@@ -31,7 +31,7 @@ createRequestOptions = (connectId, secret, version = latest) ->
         query = querystring.stringify(options)
         options =
             host: 'api.zanox.com'
-            path: "/json#{uri}?#{query}"
+            path: "/json/#{version}#{uri}?#{query}"
             method: verb
             headers:
                 'Date': timestamp
