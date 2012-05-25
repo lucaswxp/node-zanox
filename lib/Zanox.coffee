@@ -10,6 +10,9 @@ assert = require 'assert'
 hat = require 'hat'
 _ = require 'underscore'
 
+versions = ['2009-07-01', '2011-03-01']
+latest = _.last versions
+
 hatLength = (length) -> hat(4*length)
 nonce = -> hatLength 20
 timestamp = -> new Date().toUTCString()
@@ -20,7 +23,7 @@ getAuthorization = (secret) -> (verb, uri, timestamp, nonce) ->
     hmac.update signature
     hmac.digest 'base64'
 
-createRequestOptions = (connectId, secret) ->
+createRequestOptions = (connectId, secret, version = latest) ->
     getAuth = getAuthorization secret
     (verb, uri, timestamp, nonce, options) ->
         signature = getAuth verb, uri, timestamp, nonce
