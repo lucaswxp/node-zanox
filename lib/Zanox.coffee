@@ -5,7 +5,6 @@
 crypto = require 'crypto'
 http = require 'http'
 querystring = require 'querystring'
-assert = require 'assert'
 
 hat = require 'hat'
 _ = require 'underscore'
@@ -45,7 +44,7 @@ secureJsonParse = (text, next) ->
         next e
 
 requester = (http) => (options, next) =>
-    assert _.isFunction(next), 'missing next in requester'
+    throw 'missing next in requester' unless _.isFunction next
     raw = ''
     req = http.request options, (res) ->
         res.setEncoding 'utf8'
@@ -61,7 +60,7 @@ FetchLoop = (fetchMethod, next) =>
     results = []
     fetchLoop = (page) =>
         fetchMethod page, items, (err, result) =>
-            assert page?, 'missing page in fetchMethod call'
+            throw 'missing page in fetchMethod' unless page?
             return next err if err?
             results.push result
             enough = items * (page+1) >= result.total
@@ -74,7 +73,7 @@ module.exports = (connectId, secretKey, client = http) ->
 
     return api =
     sendRequest: (verb, uri, params, next) =>
-        assert _.isFunction(next), 'sendRequest: missing next'
+        throw 'missing next in sendRequest' unless _.isFunction next
         options = createRequests verb, uri, timestamp(), nonce(), params
         requester options, next
     getAdspaces: (next) -> api.sendRequest 'GET', '/adspaces', {}, next
@@ -97,9 +96,19 @@ module.exports = (connectId, secretKey, client = http) ->
         FetchLoop fetch, next
 
     getAllProgramsOfAdspace: (id, next) ->
-        assert id?, 'getAllProgramsOfAdsacpe: missing id'
-        assert _.isFunction(next), 'getAllProgramsOfAdspace: missing next'
+        throw 'getAllProgramsOfAdspace: missing id' unless id?
+        throw 'getAllProgramsOfAdspace: missing next' unless _.isFunction next
         method = api.getProgramsOfAdspace
         fetch = (page, items, next) ->
             method id, {items: items, page: page}, next
+        FetchLoop fetch, next
+
+    getProgramApplications: (params, next) ->
+        throw 'getProgramApplications: missing next' unless _.isFunction next
+        api.sendRequest 'GET', "/programapplications", params, next
+
+    getAllProgramApplications: (params, next) ->
+        method = api.getProgramApplications
+        fetch = (page, items, next) ->
+            method _.extend({}, params, {items: items, page: page}), next
         FetchLoop fetch, next
