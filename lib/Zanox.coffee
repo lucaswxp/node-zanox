@@ -43,7 +43,7 @@ secureJsonParse = (text, next) ->
     catch e
         next e
 
-requester = (http) => (options, next) =>
+Requester = (http) => (options, next) =>
     throw new Error 'missing next in requester' unless _.isFunction next
     raw = ''
     req = http.request options, (res) ->
@@ -69,7 +69,7 @@ FetchLoop = (fetchMethod, next) =>
 
 module.exports = (connectId, secretKey, client = http) ->
     createRequests = createRequestOptions connectId, secretKey
-    requester = requester client
+    requester = Requester client
 
     return api =
     sendRequest: (verb, uri, params, next) =>
