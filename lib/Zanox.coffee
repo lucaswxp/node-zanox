@@ -44,7 +44,7 @@ secureJsonParse = (text, next) ->
         next e
 
 requester = (http) => (options, next) =>
-    throw 'missing next in requester' unless _.isFunction next
+    throw new Error 'missing next in requester' unless _.isFunction next
     raw = ''
     req = http.request options, (res) ->
         res.setEncoding 'utf8'
@@ -60,7 +60,7 @@ FetchLoop = (fetchMethod, next) =>
     results = []
     fetchLoop = (page) =>
         fetchMethod page, items, (err, result) =>
-            throw 'missing page in fetchMethod' unless page?
+            throw new Error 'missing page in fetchMethod' unless page?
             return next err if err?
             results.push result
             enough = items * (page+1) >= result.total
@@ -73,7 +73,7 @@ module.exports = (connectId, secretKey, client = http) ->
 
     return api =
     sendRequest: (verb, uri, params, next) =>
-        throw 'missing next in sendRequest' unless _.isFunction next
+        throw new Error 'missing next in sendRequest' unless _.isFunction next
         options = createRequests verb, uri, timestamp(), nonce(), params
         requester options, next
     getAdspaces: (next) -> api.sendRequest 'GET', '/adspaces', {}, next
@@ -96,15 +96,15 @@ module.exports = (connectId, secretKey, client = http) ->
         FetchLoop fetch, next
 
     getAllProgramsOfAdspace: (id, next) ->
-        throw 'getAllProgramsOfAdspace: missing id' unless id?
-        throw 'getAllProgramsOfAdspace: missing next' unless _.isFunction next
+        throw new Error 'getAllProgramsOfAdspace: missing id' unless id?
+        throw new Error 'getAllProgramsOfAdspace: missing next' unless _.isFunction next
         method = api.getProgramsOfAdspace
         fetch = (page, items, next) ->
             method id, {items: items, page: page}, next
         FetchLoop fetch, next
 
     getProgramApplications: (params, next) ->
-        throw 'getProgramApplications: missing next' unless _.isFunction next
+        throw new Error 'getProgramApplications: missing next' unless _.isFunction next
         api.sendRequest 'GET', "/programapplications", params, next
 
     getAllProgramApplications: (params, next) ->
