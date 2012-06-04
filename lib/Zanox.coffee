@@ -103,6 +103,11 @@ module.exports = (connectId, secretKey, client = http) ->
             method id, {items: items, page: page}, next
         FetchLoop fetch, next
 
+    getAllAdmedia: (params, next) ->
+        method = api.getAdmedia
+        fetch = (page, items, next) -> method _.extend({}, params, {items: items, page: page}), next
+        FetchLoop fetch, next
+
     getProgramApplications: (params, next) ->
         throw new Error 'getProgramApplications: missing next' unless _.isFunction next
         api.sendRequest 'GET', "/programapplications", params, next
