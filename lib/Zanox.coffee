@@ -131,3 +131,36 @@ module.exports = (connectId, secretKey, client = http) ->
         fetchProgram = (program, next) ->
             api.getAllAdmedia (_.extend {}, params, {program: program}), next
         async.map programs, fetchProgram, nextExtract 'admedium', next
+
+    # hack to fetch all shops as `/programs/adspace` is non functional
+    # returns an array [{
+    #  id: shop id
+    #  name: shop name
+    #  link: trackinglink
+    # }]
+    getTrackingLinksForAdspace: (adspace, next) ->
+        appParams =
+            adspace: adspace
+            status: 'confirmed'
+        admediaParams =
+            purpose: 'startpage'
+            admediumtype: 'text'
+            partnership: 'direct'
+            items: 50
+
+        extractProgramIds = (applications) ->
+            programs = _.pluck applications, 'program'
+            programIds = _.pluck programs, '@id'
+
+        formatAdmedia = (admedia) ->
+            id: admedia.program['@id']
+            name: admedia.program['$']
+            link: _.first(admedia.trackingLinks.trackingLink).ppc
+
+        api.getAllProgramApplications appParams, (err, applications) ->
+            return next err if err?
+            programIds = extractProgramIds applications
+            api.getAdmediaOfPrograms programIds, admediaParams, (err, admedias) ->
+                return console.log err if err?
+                result = _.map admedias, formatAdmedia
+                next null, result
