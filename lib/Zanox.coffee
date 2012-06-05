@@ -8,6 +8,7 @@ querystring = require 'querystring'
 
 hat = require 'hat'
 _ = require 'underscore'
+async = require 'async'
 
 versions = ['2009-07-01', '2011-03-01']
 latest = _.last versions
@@ -67,6 +68,21 @@ FetchLoop = (fetchMethod, next) =>
             if enough then next null, results else fetchLoop page+1
     fetchLoop 0
 
+extract = (type, json) ->
+    json = _.flatten json
+    hasContent = (e) -> e["#{type}Items"]?
+    noAdmedia = _.reject json, hasContent
+    # console.log "#{noAdmedia.length} shops have no admedia"
+    # noAdmedia.forEach (s) -> console.log s
+    hasAdmedia = _.filter json, hasContent
+    items = _.pluck hasAdmedia, "#{type}Items"
+    item = _.pluck items, "#{type}Item"
+    _.flatten item
+
+nextExtract = (type, next) ->(err, json) ->
+    return next err if err?
+    next null, extract type, json
+
 module.exports = (connectId, secretKey, client = http) ->
     createRequests = createRequestOptions connectId, secretKey
     requester = Requester client
@@ -76,14 +92,19 @@ module.exports = (connectId, secretKey, client = http) ->
         throw new Error 'missing next in sendRequest' unless _.isFunction next
         options = createRequests verb, uri, timestamp(), nonce(), params
         requester options, next
+
+
     getAdspaces: (next) -> api.sendRequest 'GET', '/adspaces', {}, next
+
+    getPrograms: (params, next) -> api.sendRequest 'GET', '/programs', params, next
+
     getAdmedia: (params, next) -> api.sendRequest 'GET', '/admedia', params, next
-    getProgramsOfAdspace: (id, params, next) ->
-        api.sendRequest 'GET', "/programs/adspace/#{id}", params, next
-    getProgram: (id, next) ->
-        api.sendRequest 'GET', "/programs/program/#{id}", {}, next
-    getSalesOfDate: (date, params, next) ->
-        api.sendRequest 'GET', "/reports/sales/date/#{date}", params, next
+
+    getProgram: (id, next) -> api.sendRequest 'GET', "/programs/program/#{id}", {}, next
+
+    getSalesOfDate: (date, params, next) -> api.sendRequest 'GET', "/reports/sales/date/#{date}", params, next
+
+    getProgramApplications: (params, next) -> api.sendRequest 'GET', "/programapplications", params, next
 
     # generic fetch all
     # paramters, conf, callback
@@ -95,25 +116,18 @@ module.exports = (connectId, secretKey, client = http) ->
             method date, fetchParams,  next
         FetchLoop fetch, next
 
-    getAllProgramsOfAdspace: (id, next) ->
-        throw new Error 'getAllProgramsOfAdspace: missing id' unless id?
-        throw new Error 'getAllProgramsOfAdspace: missing next' unless _.isFunction next
-        method = api.getProgramsOfAdspace
-        fetch = (page, items, next) ->
-            method id, {items: items, page: page}, next
-        FetchLoop fetch, next
-
     getAllAdmedia: (params, next) ->
         method = api.getAdmedia
         fetch = (page, items, next) -> method _.extend({}, params, {items: items, page: page}), next
         FetchLoop fetch, next
 
-    getProgramApplications: (params, next) ->
-        throw new Error 'getProgramApplications: missing next' unless _.isFunction next
-        api.sendRequest 'GET', "/programapplications", params, next
-
     getAllProgramApplications: (params, next) ->
         method = api.getProgramApplications
         fetch = (page, items, next) ->
             method _.extend({}, params, {items: items, page: page}), next
-        FetchLoop fetch, next
+        FetchLoop fetch, nextExtract 'programApplication', next
+
+    getAdmediaOfPrograms: (programs, params, next) ->
+        fetchProgram = (program, next) ->
+            api.getAllAdmedia (_.extend {}, params, {program: program}), next
+        async.map programs, fetchProgram, nextExtract 'admedium', next
