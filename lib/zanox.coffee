@@ -162,5 +162,6 @@ module.exports = (connectId, secretKey, client = http) ->
             programIds = extractProgramIds applications
             api.getAdmediaOfPrograms programIds, admediaParams, (err, admedias) ->
                 return console.log err if err?
+                admedias = _.filter admedias, (e) -> e
                 result = _.map admedias, formatAdmedia
                 next null, result
