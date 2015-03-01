@@ -1,7 +1,7 @@
 {
   "author": "Mark Engel <mark@engel.io> (https://github.com/mren)",
   "name": "zanox",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "dependencies": {
     "hat": "0.0.3",
     "underscore": "1.4.4",
