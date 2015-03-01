@@ -106,6 +106,8 @@ module.exports = (connectId, secretKey, client = http) ->
 
     getProgramApplications: (params, next) -> api.sendRequest 'GET', "/programapplications", params, next
 
+    getLeadsOfDate: (date, params, next) -> api.sendRequest 'GET', "/reports/leads/date/#{date}", params, next
+
     # generic fetch all
     # paramters, conf, callback
     getAllSalesOfDate: (date, params, next) ->
