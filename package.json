@@ -4,8 +4,8 @@
   "version": "1.1.0",
   "dependencies": {
     "hat": "0.0.3",
-    "underscore": "1.4.4",
-    "async": "0.2.8"
+    "underscore": "1.8.3",
+    "async": "1.4.0"
   },
   "main": "lib/zanox"
 }
